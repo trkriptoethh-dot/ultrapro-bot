@@ -1,10 +1,8 @@
 from telethon import TelegramClient, events
-import asyncio, os, httpx
+import asyncio, os
 
 API_ID = int(os.environ.get('API_ID', '37746589'))
 API_HASH = os.environ.get('API_HASH', '2e3ee607acf1e04dfe81ad09e5631bd0')
-BOT_TOKEN = os.environ.get('BOT_TOKEN', '8658568083:AAGmUuSxY356CB03iFq0YnLvbx40OATxMjg')
-CHAT_ID = int(os.environ.get('CHAT_ID', '-1003134791575'))
 SOURCE_CHAT = int(os.environ.get('SOURCE_CHAT', '-1003134791575'))
 
 client = TelegramClient('session', API_ID, API_HASH)
@@ -19,19 +17,17 @@ def clean(text):
 
 @client.on(events.NewMessage(chats=SOURCE_CHAT))
 async def handler(event):
+    # Sadece bot mesajlarını işle
     if not event.sender or not getattr(event.sender, 'bot', False):
         return
     text = event.raw_text or ''
     t = text.upper()
     if ('BUY' in t or 'SELL' in t) and 'USDT' in t and 'PRICE' in t:
         msg = clean(text)
-        # Önce orijinal mesajı sil
+        print(f'Sinyal: {msg[:80]}')
         await event.delete()
-        # Sonra temiz mesaj gönder
-        async with httpx.AsyncClient() as http:
-            await http.post(f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',
-                json={'chat_id': CHAT_ID, 'text': msg})
-        print(f'Sinyal iletildi: {msg[:80]}')
+        # Bot API değil, userbot hesabıyla gönder
+        await client.send_message(SOURCE_CHAT, msg)
 
 async def main():
     print('Baslıyor...')
