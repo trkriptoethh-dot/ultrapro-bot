@@ -19,17 +19,19 @@ def clean(text):
 
 @client.on(events.NewMessage(chats=SOURCE_CHAT))
 async def handler(event):
-    # Sadece bot mesajlarını işle (email2telegram botu)
     if not event.sender or not getattr(event.sender, 'bot', False):
         return
     text = event.raw_text or ''
     t = text.upper()
     if ('BUY' in t or 'SELL' in t) and 'USDT' in t and 'PRICE' in t:
         msg = clean(text)
-        print(f'Sinyal: {msg[:80]}')
+        # Önce orijinal mesajı sil
+        await event.delete()
+        # Sonra temiz mesaj gönder
         async with httpx.AsyncClient() as http:
             await http.post(f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',
                 json={'chat_id': CHAT_ID, 'text': msg})
+        print(f'Sinyal iletildi: {msg[:80]}')
 
 async def main():
     print('Baslıyor...')
